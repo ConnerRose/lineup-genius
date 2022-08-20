@@ -1,3 +1,4 @@
+from itertools import islice
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -27,24 +28,67 @@ event_codes = {
     7200: "200 Medley Relay"
 }
 
+# Times with a power point score of 1000 for an 18 year old male
+# From https://www.usaswimming.org/times/popular-resources/power-point-calculator
+base_times = {
+    150: 18.94,
+    1100: 42.03,
+    1200: 92.93,
+    1500: 251.50,
+    2100: 46.65,
+    3100: 52.50,
+    4100: 46.02,
+    5200: 101.95
+}
 
-def get_times():
-    print("Downloading data from swimcloud.com...")
+
+def get_times() -> None:
+    """Download times from swimcloud.com and save them to .csv files in times/<team>/<event>.csv"""
+    print("Downloading times from swimcloud.com...")
+    print("Saving times to times/<team>/<event>.csv")
     for team_code, team_name in team_codes.items():
         print(f"{team_name}...")
-        if not os.path.exists(f"times/{team_name.lower().replace(' ', '_')}"):
-            os.mkdir(f"times/{team_name.lower().replace(' ', '_')}")
+
+        team_dir = f"times/{team_name.lower().replace(' ', '_')}"
+        if not os.path.exists(team_dir):
+            os.mkdir(team_dir)
+
         for event_code, event_name in event_codes.items():
             print(f"\t{event_name}")
             df = pd.read_html(
                 f"https://www.swimcloud.com/team/{team_code}/times/?page=1&gender=M&event={event_code}&course=Y&season=25")[0]
-            filename = f"times/{team_name.lower().replace(' ' , '_')}/{event_name.lower().replace(' ', '_')}.csv"
+            filename = f"{team_dir}/{event_name.lower().replace(' ', '_')}.csv"
             df[['Name', 'Name.1', 'Time']].to_csv(
                 filename, index=False, header=["Rank", "Name", "Time"])
 
 
+def add_points() -> None:
+    """Add point values for times in every .csv file."""
+    for team_name in team_codes.values():
+        team_dir = f"times/{team_name.lower().replace(' ', '_')}"
+
+        for event_code, event_name in event_codes.items():
+            # Don't use power points for relays
+            if event_code == 6200:
+                break
+
+            filename = f"{team_dir}/{event_name.lower().replace(' ', '_')}.csv"
+            df = pd.read_csv(filename)
+
+            # Add power points to df and write to .csv file
+            df["Points"] = [points(df["Time"][i], event_code)
+                            for i in range(len(df))]
+            df.to_csv(filename, index=False)
+
+
 def time_to_seconds(time: str) -> float:
+    """Return time in seconds, rounded to two decimal places."""
     try:
         return round(float(time), 2)
     except ValueError:
         return round(int(time[:time.index(":")]) * 60 + float(time[time.index(":") + 1:]), 2)
+
+
+def points(time: float, event: int) -> int:
+    """Return power points for a time in a certain event."""
+    return int(1000 * (base_times[event] / time_to_seconds(time)) ** 3)

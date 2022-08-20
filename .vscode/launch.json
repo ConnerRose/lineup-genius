@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "main.py",
       "console": "integratedTerminal",
-      "args": ["--get-data"],
+      // "args": ["--get-data"],
       "justMyCode": true
     }
   ]
