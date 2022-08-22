@@ -1,7 +1,7 @@
-from itertools import islice
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
 
 team_codes = {
@@ -47,37 +47,28 @@ def get_times() -> None:
     print("Downloading times from swimcloud.com...")
     print("Saving times to times/<team>/<event>.csv")
     for team_code, team_name in team_codes.items():
+        team_dir = f"times/{team_name.lower().replace(' ', '_')}"
         print(f"{team_name}...")
 
-        team_dir = f"times/{team_name.lower().replace(' ', '_')}"
         if not os.path.exists(team_dir):
             os.mkdir(team_dir)
 
         for event_code, event_name in event_codes.items():
+            filename = f"{team_dir}/{event_name.lower().replace(' ', '_')}.csv"
             print(f"\t{event_name}")
+
+            # Store data as df
             df = pd.read_html(
                 f"https://www.swimcloud.com/team/{team_code}/times/?page=1&gender=M&event={event_code}&course=Y&season=25")[0]
-            filename = f"{team_dir}/{event_name.lower().replace(' ', '_')}.csv"
-            df[['Name', 'Name.1', 'Time']].to_csv(
-                filename, index=False, header=["Rank", "Name", "Time"])
+            # Remove other columns
+            df = df[['Name', 'Name.1', 'Time']]
+            df = df.rename(columns={'Name': 'Rank', 'Name.1': 'Name'})
 
+            # Add power points to individual events only
+            if event_code not in [6200, 6400, 7200]:
+                df['Points'] = [points(df['Time'][i], event_code)
+                                for i in range(len(df))]
 
-def add_points() -> None:
-    """Add point values for times in every .csv file."""
-    for team_name in team_codes.values():
-        team_dir = f"times/{team_name.lower().replace(' ', '_')}"
-
-        for event_code, event_name in event_codes.items():
-            # Don't use power points for relays
-            if event_code == 6200:
-                break
-
-            filename = f"{team_dir}/{event_name.lower().replace(' ', '_')}.csv"
-            df = pd.read_csv(filename)
-
-            # Add power points to df and write to .csv file
-            df["Points"] = [points(df["Time"][i], event_code)
-                            for i in range(len(df))]
             df.to_csv(filename, index=False)
 
 
