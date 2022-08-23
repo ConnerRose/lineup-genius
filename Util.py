@@ -80,6 +80,13 @@ def time_to_seconds(time: str) -> float:
         return round(int(time[:time.index(":")]) * 60 + float(time[time.index(":") + 1:]), 2)
 
 
+def time_to_string(time: float) -> str:
+    if time < 60:
+        return str(time)
+    else:
+        return f"{int(time / 60)}:{round(time % 60, 2)}"
+
+
 def points(time: float, event: int) -> int:
     """Return power points for a time in a certain event."""
     return int(1000 * (base_times[event] / time_to_seconds(time)) ** 3)
