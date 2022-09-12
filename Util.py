@@ -42,8 +42,24 @@ base_times = {
 }
 
 
+def load_times(team_code: int) -> dict[int, pd.DataFrame]:
+    """Read times from .csv files and return a dict which maps each event_code
+    to a DataFrame of times
+    """
+    times = {}
+    team_dir = f"""times/{team_codes[team_code].lower().replace(' ', '_')}"""
+
+    for event_code, event_name in event_codes.items():
+        filename = f"""{team_dir}/{event_codes[event_code].lower().replace(' ', '_')}.csv"""
+        times[event_code] = pd.read_csv(filename)
+
+    return times
+
+
 def get_times() -> None:
-    """Download times from swimcloud.com and save them to .csv files in times/<team>/<event>.csv"""
+    """Download times from swimcloud.com and save them to .csv files in
+    times/<team>/<event>.csv
+    """
     print("Downloading times from swimcloud.com...")
     print("Saving times to times/<team>/<event>.csv")
     for team_code, team_name in team_codes.items():
@@ -84,7 +100,10 @@ def time_to_string(time: float) -> str:
     if time < 60:
         return str(time)
     else:
-        return f"{int(time / 60)}:{round(time % 60, 2)}"
+        if round(time % 60, 2) >= 10:
+            return f"{int(time / 60)}:{round(time % 60, 2)}"
+        else:
+            return f"{int(time / 60)}:0{round(time % 60, 2)}"
 
 
 def points(time: float, event: int) -> int:

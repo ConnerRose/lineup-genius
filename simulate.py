@@ -52,9 +52,9 @@ def simulate(teams: list[int], entries: dict[int, dict[int, list[tuple]]]) -> di
     Entries dict should be formatted as follows:\n
     {
         team_code: {
-            event_code: {
+            event_code: [
                 (athlete_name, time_in_seconds)
-            }
+            ]
         }
     }
     """
@@ -81,7 +81,7 @@ def simulate(teams: list[int], entries: dict[int, dict[int, list[tuple]]]) -> di
                 points_scored = event_points(i + 1, event_code)
                 points[result[0]] += points_scored
                 print(
-                    f"{i + 1}.  {team_codes[result[0]]}\t{points_scored}  {time_to_string(result[2])}  {result[1]}")
+                    f"{i + 1}.  {points_scored}  {time_to_string(result[2])}\t{result[1]}\t{team_codes[result[0]]}")
 
             print(f"\nResults after {event_name}:")
             for team in teams:
