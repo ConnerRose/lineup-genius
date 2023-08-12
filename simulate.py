@@ -35,7 +35,7 @@ league_meet_individual_scores = {
     16: 1
 }
 
-leageu_meet_relay_scores = {
+league_meet_relay_score = {
     1: 40,
     2: 34,
     3: 32,
